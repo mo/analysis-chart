@@ -1,0 +1,39 @@
+<meta charset="utf-8">
+
+<link  href="vendor/rickshaw.css" type="text/css" rel="stylesheet">
+<script src="vendor/d3.v3.js"></script>
+<script src="vendor/d3.layout.min.js"></script>
+<script src="vendor/rickshaw.js"></script>
+<link  href="vendor/jquery-ui/jquery-ui-1.11.2/jquery-ui.min.css" type="text/css" rel="stylesheet">
+<script src="vendor/jquery-ui/jquery-ui-1.11.2/external/jquery/jquery.js"></script>
+<script src="vendor/jquery-ui/jquery-ui-1.11.2/jquery-ui.min.js"></script>
+
+<script src="../analysis-chart.js"></script>
+<link type="text/css" rel="stylesheet" href="../analysis-chart.css">
+
+<div id="ag-element">
+
+<script>
+const series = [
+    {
+        'name': 'first series',
+        'color': 'red',
+        'data': [
+            {x: 1473595703, y: 0.72236}, {x: 1473595712, y: 0.75}, {x: 1473595727, y: 0.70236}, {x: 1473595732, y: 0.7623}, {x: 1473595736, y: 0.78236}
+        ]
+    },
+    {
+        'name': 'second series',
+        'color': 'green',
+        'data': [
+            {x: 1473595704, y: 0.140000}, {x: 1473595712, y: 0.170000}, {x: 1473595728, y: 0.200000}, {x: 1473595733, y: 0.120000}, {x: 1473595736, y: 0.120000}
+        ]
+    },
+];
+
+const agElement = document.querySelector("#ag-element");
+const analysisChart = new AnalysisChart({
+    element: agElement,
+    series
+});
+</script>
