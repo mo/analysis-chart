@@ -265,26 +265,17 @@ class AnalysisChart {
                 const diffPercentageValue = (100*lastDatapointInRange.y/firstDatapointInRange.y - 100).toFixed(2);
                 const diffPercentageStr = diffPrefix + diffPercentageValue;
                 const diffAbsoluteStr = diffPrefix + diffAbsoluteValue.toLocaleString();
+                const absoluteFrom = firstDatapointInRange.y.toLocaleString();
+                const absoluteTo = lastDatapointInRange.y.toLocaleString();
 
                 selDiffContainer.innerHTML += `
                     <div class="diff-wrapper-outer">
                         <span class="colorbox" style="background: ${series.color}"></span>
                         <div class="diff-wrapper-inner">
                             <div>${series.name}</div>
-                            <div class=".diff-value">${diffPercentageStr}% (${diffAbsoluteStr})</div>
-                            <div class="diff-details">
-                                <div><span>From value: </span><span>${firstDatapointInRange.y}</span></div>
-                                <div><span>To value: </span><span>${lastDatapointInRange.y}</span></div>
-                            </div>
+                            <div class=".diff-value">${diffPercentageStr}% (${diffAbsoluteStr}) ${absoluteFrom} &#x2799; ${absoluteTo}</div>
                         </div>
                     </div>`;
-                selDiffContainer.querySelectorAll(".diff-wrapper-outer").forEach((diffWrapper) => {
-                    const diffDetails = diffWrapper.querySelector(".diff-details");
-                    diffDetails.style.display = "none";
-                    diffWrapper.addEventListener("click", () => {
-                        diffDetails.style.display = diffDetails.style.display != "block" ? "block" : "none";
-                    });
-                });
             }
         });
 
