@@ -2,23 +2,16 @@
     position: relative;
     display: inline-block;
     font-family: Arial, Helvetica, sans-serif;
-    width: 1210px;
 }
 .analysis-chart .chart-draw-area {
     display: inline-block;
-    margin-left: 100px;
 }
 .analysis-chart .y-axis {
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 100px;
-}
-.analysis-chart .x-axis {
-    margin-left: 100px;
 }
 .analysis-chart .range-slider {
-    margin-left: 100px;
     height: 0.4em;
 }
 .analysis-chart .range-slider .ui-slider-handle {
@@ -26,11 +19,7 @@
     width: 0.8em;
 }
 .analysis-chart .annotation-timeline {
-    margin-left: 100px;
     margin-bottom: 20px;
-}
-.analysis-chart .legend {
-    min-width: 290px;
 }
 .analysis-chart .right-column {
     display: inline-block;

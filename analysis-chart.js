@@ -52,6 +52,15 @@ class AnalysisChart {
                 </div>
 
             </div>`;
+        const totalWidth = args.width || 2000;
+        const rightColumnWidth = args.rightColumnWidth || 300;
+        const yAxisWidth = args.yAxisWidth || 100;
+        const chartDrawAreaWidth = totalWidth - rightColumnWidth;
+        this.rootElement.querySelector(".main-column").style.width = chartDrawAreaWidth;
+        this.rootElement.querySelector(".main-column").style.marginLeft = yAxisWidth;
+        this.rootElement.querySelector(".legend").style.minWidth = rightColumnWidth;
+        this.rootElement.querySelector(".y-axis").style.width = yAxisWidth;
+        this.rootElement.querySelector(".y-axis").style.marginLeft = -yAxisWidth;
 
         this.series = args.series;
         this.allSeriesYMin = d3.min(args.series, serie => d3.min(serie.data, datapoint => datapoint.y));
@@ -59,10 +68,11 @@ class AnalysisChart {
         this.allSeriesYSpan = this.allSeriesYMax - this.allSeriesYMin;
         this.distanceFurthestFromZero = Math.max(Math.abs(this.allSeriesYMin), Math.abs(this.allSeriesYMax));
 
+        const chartDrawArea = this.rootElement.querySelector(".chart-draw-area");
         const graph = this.graph = new Rickshaw.Graph( {
-                element: this.rootElement.querySelector(".chart-draw-area"),
-                width: 1100,
-                height: 500,
+                element: chartDrawArea,
+                width: chartDrawAreaWidth,
+                height: args.height || 500,
                 interpolation: "linear",
                 stack: false,
                 series: args.series
@@ -138,7 +148,6 @@ class AnalysisChart {
         }
         annotator.update();
 
-        const chartDrawArea = this.rootElement.querySelector(".chart-draw-area");
         chartDrawArea.style.position = "relative";
         const drawAreaBoundingRect = this.drawAreaBoundingRect = chartDrawArea.getBoundingClientRect();
         this.selectionOutline = chartDrawArea.appendChild(document.createElement("div"));
