@@ -301,11 +301,19 @@ class AnalysisChart {
         return new Date(1000 * this.graph.x.invert(x - this.drawAreaBoundingRect.left));
     }
 
+    // Returns YYYY-mm-dd HH:MM:SS in local timezone.
     static timestampToDatetimeString(unixTimestamp) {
-        const time = new Date(unixTimestamp * 1000);
-        return time.toISOString().replace("T", " ").substring(0, 16);
+        const ts = new Date(unixTimestamp * 1000);
+        const year = ts.getFullYear();
+        const month = ('0' + (ts.getMonth() + 1)).slice(-2);
+        const day = ('0'+(ts.getDate())).slice(-2);
+        const hour = ('0' + ts.getHours()).slice(-2);
+        const minute = ('0' + ts.getMinutes()).slice(-2);
+        const second = ('0' + ts.getSeconds()).slice(-2);
+        return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
     }
 
+    // Returns YYYY-mm-dd in local timezone.
     static timestampToDate(x) {
         return this.timestampToDatetimeString(x).substring(0, 10);
     }
