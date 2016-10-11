@@ -246,6 +246,30 @@ class AnalysisChart {
         this.rootElement.querySelector(".selection-active").style.display = "none";
     }
 
+    updateDiff(series, firstDatapointInRange, lastDatapointInRange, selDiffContainer) {
+        const diffAbsoluteValue = lastDatapointInRange.y - firstDatapointInRange.y;
+        let diffPrefix;
+        if (diffAbsoluteValue >= 0) {
+            diffPrefix = '+';
+        } else {
+            diffPrefix = '';
+        }
+        const diffPercentageValue = (100*lastDatapointInRange.y/firstDatapointInRange.y - 100).toFixed(2);
+        const diffPercentageStr = diffPrefix + diffPercentageValue;
+        const diffAbsoluteStr = diffPrefix + diffAbsoluteValue.toLocaleString();
+        const absoluteFrom = firstDatapointInRange.y.toLocaleString();
+        const absoluteTo = lastDatapointInRange.y.toLocaleString();
+
+        selDiffContainer.innerHTML += `
+            <div class="diff-wrapper-outer">
+                <span class="colorbox" style="background: ${series.color}"></span>
+                <div class="diff-wrapper-inner">
+                    <div>${series.name}</div>
+                    <div class=".diff-value">${diffPercentageStr}% (${diffAbsoluteStr}) ${absoluteFrom} &#x2799; ${absoluteTo}</div>
+                </div>
+            </div>`;
+    }
+
     updateSelectionInfo(selStartX, selEndX) {
         const selLeft = Math.min(selStartX, selEndX);
         const selRight = Math.max(selStartX, selEndX);
@@ -264,27 +288,7 @@ class AnalysisChart {
         this.series.forEach(series => {
             const [firstDatapointInRange, lastDatapointInRange] = this.getFirstAndLastDatapointInRange(fromTimestamp, toTimestamp, series);
             if (firstDatapointInRange) {
-                const diffAbsoluteValue = lastDatapointInRange.y - firstDatapointInRange.y;
-                let diffPrefix;
-                if (diffAbsoluteValue >= 0) {
-                    diffPrefix = '+';
-                } else {
-                    diffPrefix = '';
-                }
-                const diffPercentageValue = (100*lastDatapointInRange.y/firstDatapointInRange.y - 100).toFixed(2);
-                const diffPercentageStr = diffPrefix + diffPercentageValue;
-                const diffAbsoluteStr = diffPrefix + diffAbsoluteValue.toLocaleString();
-                const absoluteFrom = firstDatapointInRange.y.toLocaleString();
-                const absoluteTo = lastDatapointInRange.y.toLocaleString();
-
-                selDiffContainer.innerHTML += `
-                    <div class="diff-wrapper-outer">
-                        <span class="colorbox" style="background: ${series.color}"></span>
-                        <div class="diff-wrapper-inner">
-                            <div>${series.name}</div>
-                            <div class=".diff-value">${diffPercentageStr}% (${diffAbsoluteStr}) ${absoluteFrom} &#x2799; ${absoluteTo}</div>
-                        </div>
-                    </div>`;
+                this.updateDiff(series, firstDatapointInRange, lastDatapointInRange, selDiffContainer);
             }
         });
 
