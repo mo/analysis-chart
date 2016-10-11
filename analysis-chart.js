@@ -246,7 +246,9 @@ class AnalysisChart {
         this.rootElement.querySelector(".selection-active").style.display = "none";
     }
 
-    updateDiff(series, firstDatapointInRange, lastDatapointInRange, selDiffContainer) {
+    appendSeriesDiff(series, datapointsInRange, selDiffContainer) {
+        const firstDatapointInRange = datapointsInRange.slice(0, 1)[0];
+        const lastDatapointInRange = datapointsInRange.slice(-1)[0];
         const diffAbsoluteValue = lastDatapointInRange.y - firstDatapointInRange.y;
         let diffPrefix;
         if (diffAbsoluteValue >= 0) {
@@ -259,6 +261,8 @@ class AnalysisChart {
         const diffAbsoluteStr = diffPrefix + diffAbsoluteValue.toLocaleString();
         const absoluteFrom = firstDatapointInRange.y.toLocaleString();
         const absoluteTo = lastDatapointInRange.y.toLocaleString();
+        const median = AnalysisChart.median(datapointsInRange.map((dp) => dp.y));
+        const medianStr = median.toLocaleString();
 
         selDiffContainer.innerHTML += `
             <div class="diff-wrapper-outer">
@@ -266,6 +270,7 @@ class AnalysisChart {
                 <div class="diff-wrapper-inner">
                     <div>${series.name}</div>
                     <div class=".diff-value">${diffPercentageStr}% (${diffAbsoluteStr}) ${absoluteFrom} &#x2799; ${absoluteTo}</div>
+                    <div class=".diff-value">Median: ${medianStr}</div>
                 </div>
             </div>`;
     }
@@ -286,9 +291,9 @@ class AnalysisChart {
         const selDiffContainer = this.rootElement.querySelector(".selection-diff-container");
         selDiffContainer.innerHTML = '';
         this.series.forEach(series => {
-            const [firstDatapointInRange, lastDatapointInRange] = this.getFirstAndLastDatapointInRange(fromTimestamp, toTimestamp, series);
-            if (firstDatapointInRange) {
-                this.updateDiff(series, firstDatapointInRange, lastDatapointInRange, selDiffContainer);
+            const datapointsInRange = this.getDatapointInRange(fromTimestamp, toTimestamp, series);
+            if (datapointsInRange.length > 0) {
+                this.appendSeriesDiff(series, datapointsInRange, selDiffContainer);
             }
         });
 
@@ -322,21 +327,26 @@ class AnalysisChart {
         return this.timestampToDatetimeString(x).substring(0, 10);
     }
 
-    getFirstAndLastDatapointInRange(timestampFrom, timestampTo, series) {
-        let firstDatapointInRange = undefined;
-        let lastDatapointInRange = undefined;
-        for (var datapoint of series.data) {
+    static median(vals) {
+        const valsCopy = vals.slice();
+        valsCopy.sort();
+        const count = valsCopy.length;
+        const middleIdx = Math.floor(count / 2);
+        if (count % 2 == 0) {
+            return (valsCopy[middleIdx - 1] + valsCopy[middleIdx]) / 2;
+        } else {
+            return valsCopy[middleIdx];
+        }
+    }
+
+    getDatapointInRange(timestampFrom, timestampTo, series) {
+        const datapointsInRange = [];
+        for (let datapoint of series.data) {
             const x = datapoint.x;
-            const y = datapoint.y;
             if (timestampFrom < x && x < timestampTo) {
-                if (!firstDatapointInRange || x - timestampFrom < firstDatapointInRange.x - timestampFrom) {
-                    firstDatapointInRange = datapoint;
-                }
-                if (!lastDatapointInRange || timestampTo - x < timestampTo - lastDatapointInRange.x) {
-                    lastDatapointInRange = datapoint;
-                }
+                datapointsInRange.push(datapoint);
             }
         }
-        return [firstDatapointInRange, lastDatapointInRange];
+        return datapointsInRange;
     }
 }
