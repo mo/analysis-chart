@@ -1,8 +1,8 @@
 class AnalysisChart {
   constructor(args) {
-    const allYAxisScalingMethods = ["fixed-zero", "fixed", "rescale"];
+    const allYAxisScalingMethods = ['fixed-zero', 'fixed', 'rescale'];
     if (allYAxisScalingMethods.indexOf(args.yAxisScalingMode) == -1) {
-      args.yAxisScalingMode = "fixed-zero";
+      args.yAxisScalingMode = 'fixed-zero';
     }
 
     this.onRangeSelectedCallbacks = [];
@@ -55,11 +55,11 @@ class AnalysisChart {
     const rightColumnWidth = args.rightColumnWidth || 300;
     const yAxisWidth = args.yAxisWidth || 100;
     const chartDrawAreaWidth = totalWidth - rightColumnWidth;
-    this.rootElement.querySelector(".main-column").style.width = chartDrawAreaWidth;
-    this.rootElement.querySelector(".main-column").style.marginLeft = yAxisWidth;
-    this.rootElement.querySelector(".legend").style.minWidth = rightColumnWidth;
-    this.rootElement.querySelector(".y-axis").style.width = yAxisWidth;
-    this.rootElement.querySelector(".y-axis").style.marginLeft = -yAxisWidth;
+    this.rootElement.querySelector('.main-column').style.width = chartDrawAreaWidth;
+    this.rootElement.querySelector('.main-column').style.marginLeft = yAxisWidth;
+    this.rootElement.querySelector('.legend').style.minWidth = rightColumnWidth;
+    this.rootElement.querySelector('.y-axis').style.width = yAxisWidth;
+    this.rootElement.querySelector('.y-axis').style.marginLeft = -yAxisWidth;
 
     this.series = args.series;
     this.allSeriesYMin = d3.min(args.series, serie => d3.min(serie.data, datapoint => datapoint.y));
@@ -67,12 +67,12 @@ class AnalysisChart {
     this.allSeriesYSpan = this.allSeriesYMax - this.allSeriesYMin;
     this.distanceFurthestFromZero = Math.max(Math.abs(this.allSeriesYMin), Math.abs(this.allSeriesYMax));
 
-    const chartDrawArea = this.rootElement.querySelector(".chart-draw-area");
+    const chartDrawArea = this.rootElement.querySelector('.chart-draw-area');
     const graph = this.graph = new Rickshaw.Graph( {
       element: chartDrawArea,
       width: chartDrawAreaWidth,
       height: args.height || 500,
-      interpolation: "linear",
+      interpolation: 'linear',
       stack: false,
       series: args.series
     } );
@@ -80,29 +80,29 @@ class AnalysisChart {
     graph.render();
 
     this.rootElement.querySelector('.btn-fixed-zero').addEventListener('click', (ev) => {
-      this.setYAxisScaling("fixed-zero");
+      this.setYAxisScaling('fixed-zero');
     });
 
 
     this.rootElement.querySelector('.btn-fixed').addEventListener('click', (ev) => {
-      this.setYAxisScaling("fixed");
+      this.setYAxisScaling('fixed');
     });
 
     this.rootElement.querySelector('.btn-rescale').addEventListener('click', (ev) => {
-      this.setYAxisScaling("rescale");
+      this.setYAxisScaling('rescale');
     });
 
     this.rootElement.querySelector('.btn-' + args.yAxisScalingMode).checked = true;
     this.setYAxisScaling(args.yAxisScalingMode);
 
     if (args.series.length > 1) {
-      this.rootElement.querySelector('.legend-help-text').style.display = "block";
+      this.rootElement.querySelector('.legend-help-text').style.display = 'block';
     }
 
     var xAxis = new Rickshaw.Graph.Axis.X({
       graph: graph,
       tickFormat: (x) => AnalysisChart.timestampToDate(x),
-      orientation: "bottom",
+      orientation: 'bottom',
       pixelsPerTick: 120,
       element: this.rootElement.querySelector('.x-axis'),
     });
@@ -143,21 +143,21 @@ class AnalysisChart {
     });
 
     for (let timestamp in args.annotations) {
-      annotator.add(timestamp, AnalysisChart.timestampToDate(timestamp) + ": " + args.annotations[timestamp]);
+      annotator.add(timestamp, AnalysisChart.timestampToDate(timestamp) + ': ' + args.annotations[timestamp]);
     }
     annotator.update();
 
-    chartDrawArea.style.position = "relative";
+    chartDrawArea.style.position = 'relative';
     const drawAreaBoundingRect = this.drawAreaBoundingRect = chartDrawArea.getBoundingClientRect();
-    this.selectionOutline = chartDrawArea.appendChild(document.createElement("div"));
-    this.selectionOutline.className += "selection-outline";
-    this.selectionOutline.style.position = "absolute";
-    this.selectionOutline.style.border = "1px dashed black";
-    this.selectionOutline.style['pointer-events'] = "none";
+    this.selectionOutline = chartDrawArea.appendChild(document.createElement('div'));
+    this.selectionOutline.className += 'selection-outline';
+    this.selectionOutline.style.position = 'absolute';
+    this.selectionOutline.style.border = '1px dashed black';
+    this.selectionOutline.style['pointer-events'] = 'none';
     let isMouseDown = false;
     let selStartX;
 
-    chartDrawArea.addEventListener("mousedown", (ev) => {
+    chartDrawArea.addEventListener('mousedown', (ev) => {
       selStartX = ev.clientX;
       this.selectionOutline.style.left = ev.clientX - drawAreaBoundingRect.left;
       this.selectionOutline.style.top = 0;
@@ -166,10 +166,10 @@ class AnalysisChart {
       isMouseDown = true;
       // Selection should remain hidden until cursor has moved at least 10 px.
       this.hideSelection();
-      chartDrawArea.querySelector(".detail").style.display = "none";
+      chartDrawArea.querySelector('.detail').style.display = 'none';
       ev.preventDefault();
     });
-    chartDrawArea.addEventListener("mousemove", (ev) => {
+    chartDrawArea.addEventListener('mousemove', (ev) => {
       const selEndX = ev.clientX;
       if (isMouseDown) {
         const selectionWidth = Math.abs(selEndX - selStartX);
@@ -179,23 +179,23 @@ class AnalysisChart {
         this.updateSelectionInfo(selStartX, selEndX);
 
         if (selectionWidth > 10) {
-          this.selectionOutline.style.display = "block";
+          this.selectionOutline.style.display = 'block';
         }
       }
     });
-    chartDrawArea.addEventListener("mouseup", (ev) => {
+    chartDrawArea.addEventListener('mouseup', (ev) => {
       if (isMouseDown) {
         isMouseDown = false;
         const selEndX = ev.clientX;
         const selectionWidth = Math.abs(selEndX - selStartX);
-        chartDrawArea.querySelector(".detail").style.display = "block";
+        chartDrawArea.querySelector('.detail').style.display = 'block';
         if (selectionWidth < 10) {
           // Classify this "drag" as a "click" instead and remove selection
           this.hideSelection();
         }
       }
     });
-    chartDrawArea.addEventListener("mouseleave", (ev) => {
+    chartDrawArea.addEventListener('mouseleave', (ev) => {
       if (isMouseDown) {
         isMouseDown = false;
       }
@@ -208,23 +208,23 @@ class AnalysisChart {
 
   setYAxisScaling(mode) {
     switch (mode) {
-    case "fixed-zero":
+    case 'fixed-zero':
       this.graph.configure({
         min: Math.min(this.allSeriesYMin, 0),
         max: Math.max(this.allSeriesYMax + 0.1 * this.distanceFurthestFromZero, 0),
       });
       this.graph.render();
       break;
-    case "fixed":
+    case 'fixed':
       this.graph.configure({
         min: this.allSeriesYMin - 0.1 * this.allSeriesYSpan,
         max: this.allSeriesYMax + 0.1 * this.allSeriesYSpan,
       });
       this.graph.render();
       break;
-    case "rescale":
+    case 'rescale':
       this.graph.configure({
-        min: "auto",
+        min: 'auto',
         max: undefined,
       });
       this.graph.render();
@@ -240,9 +240,9 @@ class AnalysisChart {
   }
 
   hideSelection() {
-    this.selectionOutline.style.display = "none";
-    this.rootElement.querySelector(".selection-inactive").style.display = "block";
-    this.rootElement.querySelector(".selection-active").style.display = "none";
+    this.selectionOutline.style.display = 'none';
+    this.rootElement.querySelector('.selection-inactive').style.display = 'block';
+    this.rootElement.querySelector('.selection-active').style.display = 'none';
   }
 
   appendSeriesDiff(series, datapointsInRange, selDiffContainer) {
@@ -281,13 +281,13 @@ class AnalysisChart {
     const fromTimestamp = this.graph.x.invert(selLeft - this.drawAreaBoundingRect.left);
     const to = this.getTimeAtChartXCoord(selRight);
     const toTimestamp = this.graph.x.invert(selRight - this.drawAreaBoundingRect.left);
-    this.rootElement.querySelector(".selection-inactive").style.display = "none";
-    this.rootElement.querySelector(".selection-active").style.display = "block";
+    this.rootElement.querySelector('.selection-inactive').style.display = 'none';
+    this.rootElement.querySelector('.selection-active').style.display = 'block';
 
-    this.rootElement.querySelector(".selection-start-time").innerText = from.toISOString().replace("T", " ").slice(0, 16);
-    this.rootElement.querySelector(".selection-stop-time").innerText = to.toISOString().replace("T", " ").slice(0, 16);
+    this.rootElement.querySelector('.selection-start-time').innerText = from.toISOString().replace('T', ' ').slice(0, 16);
+    this.rootElement.querySelector('.selection-stop-time').innerText = to.toISOString().replace('T', ' ').slice(0, 16);
 
-    const selDiffContainer = this.rootElement.querySelector(".selection-diff-container");
+    const selDiffContainer = this.rootElement.querySelector('.selection-diff-container');
     selDiffContainer.innerHTML = '';
     this.series.forEach(series => {
       const datapointsInRange = this.getDatapointInRange(fromTimestamp, toTimestamp, series);
