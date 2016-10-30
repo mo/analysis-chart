@@ -1,5 +1,6 @@
 class AnalysisChart {
-  constructor(args) {
+  constructor(argsParameter) {
+    const args = Object.assign({}, argsParameter);
     const allYAxisScalingMethods = ['fixed-zero', 'fixed', 'rescale'];
     if (allYAxisScalingMethods.indexOf(args.yAxisScalingMode) == -1) {
       args.yAxisScalingMode = 'fixed-zero';
