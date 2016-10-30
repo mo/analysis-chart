@@ -2,7 +2,7 @@ class AnalysisChart {
   constructor(argsParameter) {
     const args = Object.assign({}, argsParameter);
     const allYAxisScalingMethods = ['fixed-zero', 'fixed', 'rescale'];
-    if (allYAxisScalingMethods.indexOf(args.yAxisScalingMode) == -1) {
+    if (allYAxisScalingMethods.indexOf(args.yAxisScalingMode) === -1) {
       args.yAxisScalingMode = 'fixed-zero';
     }
 
@@ -69,14 +69,14 @@ class AnalysisChart {
     this.distanceFurthestFromZero = Math.max(Math.abs(this.allSeriesYMin), Math.abs(this.allSeriesYMax));
 
     const chartDrawArea = this.rootElement.querySelector('.chart-draw-area');
-    const graph = this.graph = new Rickshaw.Graph( {
+    const graph = this.graph = new Rickshaw.Graph({
       element: chartDrawArea,
       width: chartDrawAreaWidth,
       height: args.height || 500,
       interpolation: 'linear',
       stack: false,
-      series: args.series
-    } );
+      series: args.series,
+    });
     graph.setRenderer('line');
     graph.render();
 
@@ -93,16 +93,16 @@ class AnalysisChart {
       this.setYAxisScaling('rescale');
     });
 
-    this.rootElement.querySelector('.btn-' + args.yAxisScalingMode).checked = true;
+    this.rootElement.querySelector(`.btn-${args.yAxisScalingMode}`).checked = true;
     this.setYAxisScaling(args.yAxisScalingMode);
 
     if (args.series.length > 1) {
       this.rootElement.querySelector('.legend-help-text').style.display = 'block';
     }
 
-    var xAxis = new Rickshaw.Graph.Axis.X({
+    const xAxis = new Rickshaw.Graph.Axis.X({
       graph: graph,
-      tickFormat: (x) => AnalysisChart.timestampToDate(x),
+      tickFormat: x => AnalysisChart.timestampToDate(x),
       orientation: 'bottom',
       pixelsPerTick: 120,
       element: this.rootElement.querySelector('.x-axis'),
@@ -112,35 +112,35 @@ class AnalysisChart {
     const yAxis = new Rickshaw.Graph.Axis.Y({
       graph: graph,
       orientation: 'left',
-      tickFormat: (v) => v.toLocaleString(),
+      tickFormat: v => v.toLocaleString(),
       element: this.rootElement.querySelector('.y-axis'),
     });
     yAxis.render();
 
     const legend = new Rickshaw.Graph.Legend({
       element: this.rootElement.querySelector('.legend'),
-      graph: graph
+      graph: graph,
     });
 
     const shelving = new Rickshaw.Graph.Behavior.Series.Toggle({
       graph: graph,
-      legend: legend
+      legend: legend,
     });
 
     const hoverDetail = new Rickshaw.Graph.HoverDetail({
       graph: graph,
       xFormatter: args.xFormatter,
-      yFormatter: function(y) { return y.toLocaleString() }
+      yFormatter: y => y.toLocaleString(),
     });
 
     const rangeSlider = new Rickshaw.Graph.RangeSlider({
       graph: graph,
-      element: this.rootElement.querySelector('.range-slider')
+      element: this.rootElement.querySelector('.range-slider'),
     });
 
     const annotator = new Rickshaw.Graph.Annotate({
       graph: graph,
-      element: this.rootElement.querySelector('.annotation-timeline')
+      element: this.rootElement.querySelector('.annotation-timeline'),
     });
 
     for (let timestamp in args.annotations) {
@@ -209,27 +209,27 @@ class AnalysisChart {
 
   setYAxisScaling(mode) {
     switch (mode) {
-    case 'fixed-zero':
-      this.graph.configure({
-        min: Math.min(this.allSeriesYMin, 0),
-        max: Math.max(this.allSeriesYMax + 0.1 * this.distanceFurthestFromZero, 0),
-      });
-      this.graph.render();
-      break;
-    case 'fixed':
-      this.graph.configure({
-        min: this.allSeriesYMin - 0.1 * this.allSeriesYSpan,
-        max: this.allSeriesYMax + 0.1 * this.allSeriesYSpan,
-      });
-      this.graph.render();
-      break;
-    case 'rescale':
-      this.graph.configure({
-        min: 'auto',
-        max: undefined,
-      });
-      this.graph.render();
-      break;
+      case 'fixed-zero':
+        this.graph.configure({
+          min: Math.min(this.allSeriesYMin, 0),
+          max: Math.max(this.allSeriesYMax + 0.1 * this.distanceFurthestFromZero, 0),
+        });
+        this.graph.render();
+        break;
+      case 'fixed':
+        this.graph.configure({
+          min: this.allSeriesYMin - 0.1 * this.allSeriesYSpan,
+          max: this.allSeriesYMax + 0.1 * this.allSeriesYSpan,
+        });
+        this.graph.render();
+        break;
+      case 'rescale':
+        this.graph.configure({
+          min: 'auto',
+          max: undefined,
+        });
+        this.graph.render();
+        break;
     }
     this.onYAxisScalingChangedCallbacks.forEach((callback) => {
       callback(mode);
@@ -246,7 +246,7 @@ class AnalysisChart {
     this.rootElement.querySelector('.selection-active').style.display = 'none';
   }
 
-  appendSeriesDiff(series, datapointsInRange, selDiffContainer) {
+  static appendSeriesDiff(series, datapointsInRange, selDiffContainer) {
     const firstDatapointInRange = datapointsInRange.slice(0, 1)[0];
     const lastDatapointInRange = datapointsInRange.slice(-1)[0];
     const diffAbsoluteValue = lastDatapointInRange.y - firstDatapointInRange.y;
@@ -256,12 +256,12 @@ class AnalysisChart {
     } else {
       diffPrefix = '';
     }
-    const diffPercentageValue = (100*lastDatapointInRange.y/firstDatapointInRange.y - 100).toFixed(2);
+    const diffPercentageValue = (100 * lastDatapointInRange.y / firstDatapointInRange.y - 100).toFixed(2);
     const diffPercentageStr = diffPrefix + diffPercentageValue;
     const diffAbsoluteStr = diffPrefix + diffAbsoluteValue.toLocaleString();
     const absoluteFrom = firstDatapointInRange.y.toLocaleString();
     const absoluteTo = lastDatapointInRange.y.toLocaleString();
-    const median = AnalysisChart.median(datapointsInRange.map((dp) => dp.y));
+    const median = AnalysisChart.median(datapointsInRange.map(dp => dp.y));
     const medianStr = median.toLocaleString();
 
     selDiffContainer.innerHTML += `
@@ -290,10 +290,10 @@ class AnalysisChart {
 
     const selDiffContainer = this.rootElement.querySelector('.selection-diff-container');
     selDiffContainer.innerHTML = '';
-    this.series.forEach(series => {
-      const datapointsInRange = this.getDatapointInRange(fromTimestamp, toTimestamp, series);
+    this.series.forEach((series) => {
+      const datapointsInRange = AnalysisChart.getDatapointInRange(fromTimestamp, toTimestamp, series);
       if (datapointsInRange.length > 0) {
-        this.appendSeriesDiff(series, datapointsInRange, selDiffContainer);
+        AnalysisChart.appendSeriesDiff(series, datapointsInRange, selDiffContainer);
       }
     });
 
@@ -315,7 +315,7 @@ class AnalysisChart {
     const ts = new Date(unixTimestamp * 1000);
     const year = ts.getFullYear();
     const month = ('0' + (ts.getMonth() + 1)).slice(-2);
-    const day = ('0'+(ts.getDate())).slice(-2);
+    const day = ('0' + (ts.getDate())).slice(-2);
     const hour = ('0' + ts.getHours()).slice(-2);
     const minute = ('0' + ts.getMinutes()).slice(-2);
     const second = ('0' + ts.getSeconds()).slice(-2);
@@ -332,14 +332,13 @@ class AnalysisChart {
     valsCopy.sort();
     const count = valsCopy.length;
     const middleIdx = Math.floor(count / 2);
-    if (count % 2 == 0) {
+    if (count % 2 === 0) {
       return (valsCopy[middleIdx - 1] + valsCopy[middleIdx]) / 2;
-    } else {
-      return valsCopy[middleIdx];
     }
+    return valsCopy[middleIdx];
   }
 
-  getDatapointInRange(timestampFrom, timestampTo, series) {
+  static getDatapointInRange(timestampFrom, timestampTo, series) {
     const datapointsInRange = [];
     for (let datapoint of series.data) {
       const x = datapoint.x;

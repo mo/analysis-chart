@@ -1,9 +1,19 @@
 {
     "extends": "airbnb/base",
     "rules": {
-        "linebreak-style": [
-            2,
-            "unix"
+        "max-len": ["warn", 120],
+        "object-shorthand": ["error", "methods"],
+        "no-mixed-operators": [
+            "warn",
+            {
+                "groups": [
+                    ["&", "|", "^", "~", "<<", ">>", ">>>"],
+                    ["==", "!=", "===", "!==", ">", ">=", "<", "<="],
+                    ["&&", "||"],
+                    ["in", "instanceof"]
+                ],
+                "allowSamePrecedence": true
+            }
         ]
     },
     "env": {
