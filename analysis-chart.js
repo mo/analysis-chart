@@ -19,6 +19,9 @@ class AnalysisChart {
               <div class="annotation-timeline"></div>
               <div class="range-slider"></div>
       </div>
+      <div class="y-zoom-slider-column">
+              <div class="y-zoom-slider"></div>
+      </div>
       <div class="right-column">
           <div class="legend"></div>
           <div class="options-panel">
@@ -37,6 +40,10 @@ class AnalysisChart {
                   <label>
                       <input type="radio" name="y-axis-scaling" class="btn-rescale" />
                       Rescale Y-axis to currently visible data
+                  </label>
+                  <label>
+                      <input type="radio" name="y-axis-scaling" class="btn-custom" />
+                      Select y-axis range using slider
                   </label>
               </div>
           </div>
@@ -67,6 +74,8 @@ class AnalysisChart {
     this.allSeriesYMax = d3.max(args.series, serie => d3.max(serie.data, datapoint => datapoint.y));
     this.allSeriesYSpan = this.allSeriesYMax - this.allSeriesYMin;
     this.distanceFurthestFromZero = Math.max(Math.abs(this.allSeriesYMin), Math.abs(this.allSeriesYMax));
+    this.yFixedMin = this.allSeriesYMin - 0.1 * this.allSeriesYSpan;
+    this.yFixedMax = this.allSeriesYMax + 0.1 * this.allSeriesYSpan;
 
     const chartDrawArea = this.rootElement.querySelector('.chart-draw-area');
     const graph = this.graph = new Rickshaw.Graph({
@@ -79,22 +88,6 @@ class AnalysisChart {
     });
     graph.setRenderer('line');
     graph.render();
-
-    this.rootElement.querySelector('.btn-fixed-zero').addEventListener('click', (ev) => {
-      this.setYAxisScaling('fixed-zero');
-    });
-
-
-    this.rootElement.querySelector('.btn-fixed').addEventListener('click', (ev) => {
-      this.setYAxisScaling('fixed');
-    });
-
-    this.rootElement.querySelector('.btn-rescale').addEventListener('click', (ev) => {
-      this.setYAxisScaling('rescale');
-    });
-
-    this.rootElement.querySelector(`.btn-${args.yAxisScalingMode}`).checked = true;
-    this.setYAxisScaling(args.yAxisScalingMode);
 
     if (args.series.length > 1) {
       this.rootElement.querySelector('.legend-help-text').style.display = 'block';
@@ -136,6 +129,22 @@ class AnalysisChart {
     const rangeSlider = new Rickshaw.Graph.RangeSlider({
       graph: graph,
       element: this.rootElement.querySelector('.range-slider'),
+    });
+
+    this.yZoomSlider = $(this.rootElement).find('.y-zoom-slider').hide().height(args.height).slider({
+      range: true,
+      orientation: 'vertical',
+      min: this.yFixedMin,
+      max: this.yFixedMax,
+      step: (this.yFixedMax - this.yFixedMin) / 1000,
+      values: [this.yFixedMin, this.yFixedMax],
+      slide: (event, ui) => {
+        graph.configure({
+          min: ui.values[0],
+          max: ui.values[1],
+        });
+        this.graph.render();
+      },
     });
 
     const annotator = new Rickshaw.Graph.Annotate({
@@ -205,11 +214,32 @@ class AnalysisChart {
       this.hideSelection();
     });
     this.hideSelection();
+
+    this.rootElement.querySelector('.btn-fixed-zero').addEventListener('click', (ev) => {
+      this.setYAxisScaling('fixed-zero');
+    });
+
+
+    this.rootElement.querySelector('.btn-fixed').addEventListener('click', (ev) => {
+      this.setYAxisScaling('fixed');
+    });
+
+    this.rootElement.querySelector('.btn-rescale').addEventListener('click', (ev) => {
+      this.setYAxisScaling('rescale');
+    });
+
+    this.rootElement.querySelector('.btn-custom').addEventListener('click', (ev) => {
+      this.setYAxisScaling('custom');
+    });
+
+    this.rootElement.querySelector(`.btn-${args.yAxisScalingMode}`).checked = true;
+    setTimeout(() => this.setYAxisScaling(args.yAxisScalingMode), 0);
   }
 
   setYAxisScaling(mode) {
     switch (mode) {
       case 'fixed-zero':
+        this.yZoomSlider.hide();
         this.graph.configure({
           min: Math.min(this.allSeriesYMin, 0),
           max: Math.max(this.allSeriesYMax + 0.1 * this.distanceFurthestFromZero, 0),
@@ -217,16 +247,26 @@ class AnalysisChart {
         this.graph.render();
         break;
       case 'fixed':
+        this.yZoomSlider.hide();
         this.graph.configure({
-          min: this.allSeriesYMin - 0.1 * this.allSeriesYSpan,
-          max: this.allSeriesYMax + 0.1 * this.allSeriesYSpan,
+          min: this.yFixedMin,
+          max: this.yFixedMax,
         });
         this.graph.render();
         break;
       case 'rescale':
+        this.yZoomSlider.hide();
         this.graph.configure({
           min: 'auto',
           max: undefined,
+        });
+        this.graph.render();
+        break;
+      case 'custom':
+        this.yZoomSlider.show();
+        this.graph.configure({
+          min: this.yFixedMin,
+          max: this.yFixedMax,
         });
         this.graph.render();
         break;
