@@ -17,12 +17,21 @@
 .analysis-chart .range-slider {
     height: 0.4em;
 }
+.analysis-chart .y-zoom-slider .ui-slider-handle,
 .analysis-chart .range-slider .ui-slider-handle {
     height: 0.8em;
     width: 0.8em;
 }
 .analysis-chart .annotation-timeline {
     margin-bottom: 20px;
+}
+.analysis-chart .y-zoom-slider-column {
+    display: inline-block;
+    vertical-align: top;
+    margin-left: 10px;
+    }
+.analysis-chart .y-zoom-slider {
+    width: 0.4em;
 }
 .analysis-chart .right-column {
     display: inline-block;
