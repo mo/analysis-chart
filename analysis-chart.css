@@ -11,6 +11,9 @@
     top: 0;
     bottom: 0;
 }
+.analysis-chart .x-axis {
+    pointer-events: none;
+}
 .analysis-chart .range-slider {
     height: 0.4em;
 }
