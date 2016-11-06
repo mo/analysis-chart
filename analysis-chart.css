@@ -45,6 +45,10 @@
     font-size: 19pt;
     color: gray;
 }
+.analysis-chart .legend {
+    overflow-y: auto;
+    max-height: 40%;
+}
 .analysis-chart .legend-help-text {
     display: none;
     width: 280px;
