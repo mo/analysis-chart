@@ -43,7 +43,7 @@ class AnalysisChart {
                   </label>
                   <label>
                       <input type="radio" name="y-axis-scaling" class="btn-custom" />
-                      Select y-axis range using slider
+                      Select Y-axis range using slider
                   </label>
               </div>
           </div>
