@@ -1,7 +1,7 @@
 class AnalysisChart {
   constructor(argsParameter) {
     const args = Object.assign({}, argsParameter);
-    const allYAxisScalingMethods = ['fixed-zero', 'fixed', 'rescale'];
+    const allYAxisScalingMethods = ['fixed-zero', 'fixed', 'rescale', 'custom'];
     if (allYAxisScalingMethods.indexOf(args.yAxisScalingMode) === -1) {
       args.yAxisScalingMode = 'fixed-zero';
     }
@@ -232,48 +232,52 @@ class AnalysisChart {
       this.setYAxisScaling('custom');
     });
 
-    this.rootElement.querySelector(`.btn-${args.yAxisScalingMode}`).checked = true;
-    setTimeout(() => this.setYAxisScaling(args.yAxisScalingMode), 0);
-  }
+    const setYAxisScalingPrivate = (mode) => {
+      switch (mode) {
+        case 'fixed-zero':
+          this.yZoomSlider.hide();
+          this.graph.configure({
+            min: Math.min(this.allSeriesYMin, 0),
+            max: Math.max(this.allSeriesYMax + 0.1 * this.distanceFurthestFromZero, 0),
+          });
+          this.graph.render();
+          break;
+        case 'fixed':
+          this.yZoomSlider.hide();
+          this.graph.configure({
+            min: this.yFixedMin,
+            max: this.yFixedMax,
+          });
+          this.graph.render();
+          break;
+        case 'rescale':
+          this.yZoomSlider.hide();
+          this.graph.configure({
+            min: 'auto',
+            max: undefined,
+          });
+          this.graph.render();
+          break;
+        case 'custom':
+          this.yZoomSlider.show();
+          this.graph.configure({
+            min: this.yFixedMin,
+            max: this.yFixedMax,
+          });
+          this.graph.render();
+          break;
+      }
+    };
 
-  setYAxisScaling(mode) {
-    switch (mode) {
-      case 'fixed-zero':
-        this.yZoomSlider.hide();
-        this.graph.configure({
-          min: Math.min(this.allSeriesYMin, 0),
-          max: Math.max(this.allSeriesYMax + 0.1 * this.distanceFurthestFromZero, 0),
-        });
-        this.graph.render();
-        break;
-      case 'fixed':
-        this.yZoomSlider.hide();
-        this.graph.configure({
-          min: this.yFixedMin,
-          max: this.yFixedMax,
-        });
-        this.graph.render();
-        break;
-      case 'rescale':
-        this.yZoomSlider.hide();
-        this.graph.configure({
-          min: 'auto',
-          max: undefined,
-        });
-        this.graph.render();
-        break;
-      case 'custom':
-        this.yZoomSlider.show();
-        this.graph.configure({
-          min: this.yFixedMin,
-          max: this.yFixedMax,
-        });
-        this.graph.render();
-        break;
-    }
-    this.onYAxisScalingChangedCallbacks.forEach((callback) => {
-      callback(mode);
-    });
+    this.setYAxisScaling = (mode) => {
+      setYAxisScalingPrivate(mode);
+      this.onYAxisScalingChangedCallbacks.forEach((callback) => {
+        callback(mode);
+      });
+    };
+
+    this.rootElement.querySelector(`.btn-${args.yAxisScalingMode}`).checked = true;
+    setTimeout(() => setYAxisScalingPrivate(args.yAxisScalingMode), 0);
   }
 
   onYAxisScalingChanged(callback) {
