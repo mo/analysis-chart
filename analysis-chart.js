@@ -62,10 +62,14 @@ class AnalysisChart {
     const totalWidth = args.width || 2000;
     const rightColumnWidth = args.rightColumnWidth || 300;
     const yAxisWidth = args.yAxisWidth || 100;
-    const chartDrawAreaWidth = totalWidth - rightColumnWidth;
+    // The space between the main chart area and the right column is larger if
+    // the y-axis zoom slider is visible.
+    const rightColumnLeftMarginApprox = 75;
+    const chartDrawAreaWidth = totalWidth - rightColumnWidth - yAxisWidth - rightColumnLeftMarginApprox;
     this.rootElement.querySelector('.main-column').style.width = chartDrawAreaWidth;
     this.rootElement.querySelector('.main-column').style.marginLeft = yAxisWidth;
     this.rootElement.querySelector('.legend').style.minWidth = rightColumnWidth;
+    this.rootElement.querySelector('.legend').style.maxWidth = rightColumnWidth;
     this.rootElement.querySelector('.y-axis').style.width = yAxisWidth;
     this.rootElement.querySelector('.y-axis').style.marginLeft = -yAxisWidth;
 
