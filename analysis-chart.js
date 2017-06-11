@@ -119,6 +119,11 @@ class AnalysisChart {
       graph: graph,
     });
 
+    const highlight = new Rickshaw.Graph.Behavior.Series.Highlight({
+      graph: graph,
+      legend: legend
+    });
+
     const shelving = new Rickshaw.Graph.Behavior.Series.Toggle({
       graph: graph,
       legend: legend,
