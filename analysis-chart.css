@@ -61,6 +61,10 @@
     overflow-y: auto;
     max-height: 40%;
 }
+.analysis-chart .legend .label {
+    vertical-align: top;
+    line-height: 10pt;
+}
 .analysis-chart .legend-help-text {
     display: none;
     width: 280px;
