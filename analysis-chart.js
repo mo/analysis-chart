@@ -369,7 +369,7 @@ class AnalysisChart {
     const selDiffContainer = this.rootElement.querySelector('.selection-diff-container');
     selDiffContainer.innerHTML = '';
     this.series.forEach((series) => {
-      const datapointsInRange = AnalysisChart.getDatapointInRange(fromTimestamp, toTimestamp, series);
+      const datapointsInRange = AnalysisChart.getDatapointsInRange(fromTimestamp, toTimestamp, series);
       if (datapointsInRange.length > 0) {
         AnalysisChart.appendSeriesDiff(series, datapointsInRange, selDiffContainer);
       }
@@ -450,7 +450,7 @@ class AnalysisChart {
     return [durationSeconds, 'second'];
   }
 
-  static getDatapointInRange(timestampFrom, timestampTo, series) {
+  static getDatapointsInRange(timestampFrom, timestampTo, series) {
     const datapointsInRange = [];
     for (let datapoint of series.data) {
       const x = datapoint.x;
