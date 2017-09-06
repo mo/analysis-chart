@@ -454,7 +454,7 @@ class AnalysisChart {
     const datapointsInRange = [];
     for (let datapoint of series.data) {
       const x = datapoint.x;
-      if (timestampFrom < x && x < timestampTo) {
+      if (timestampFrom <= x && x <= timestampTo) {
         datapointsInRange.push(datapoint);
       }
     }
