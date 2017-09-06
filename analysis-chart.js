@@ -329,6 +329,8 @@ class AnalysisChart {
     const absoluteTo = lastDatapointInRange.y.toLocaleString();
     const median = AnalysisChart.median(datapointsInRange.map(dp => dp.y));
     const medianStr = median.toLocaleString();
+    const durationSeconds = lastDatapointInRange.x - firstDatapointInRange.x;
+    const [amount, unit] = AnalysisChart.durationInLargestUnitThatFits(durationSeconds);
 
     selDiffContainer.innerHTML += `
       <div class="diff-wrapper-outer">
@@ -336,7 +338,17 @@ class AnalysisChart {
           <div class="diff-wrapper-inner">
               <div>${series.name}</div>
               <div class=".diff-value">${diffPercentageStr}% (${diffAbsoluteStr}) ${absoluteFrom} &#x2799; ${absoluteTo}</div>
+              <div class=".diff-value">Duration: ${amount.toFixed(2)} ${unit}s</div>
               <div class=".diff-value">Median: ${medianStr}</div>
+              <div class=".diff-value">
+                <div>Per year: ${(diffAbsoluteValue / (durationSeconds / (365 * 24 * 60 * 60))).toLocaleString()}</div>
+                <div>Per month: ${(diffAbsoluteValue / (durationSeconds / (30 * 24 * 60 * 60))).toLocaleString()}</div>
+                <div>Per week: ${(diffAbsoluteValue / (durationSeconds / (7 * 24 * 60 * 60))).toLocaleString()}</div>
+                <div>Per day: ${(diffAbsoluteValue / (durationSeconds / (24 * 60 * 60))).toLocaleString()}</div>
+                <div>Per hour: ${(diffAbsoluteValue / (durationSeconds / (60 * 60))).toLocaleString()}</div>
+                <div>Per minute: ${(diffAbsoluteValue / (durationSeconds / 60)).toLocaleString()}</div>
+                <div>Per second: ${(diffAbsoluteValue / durationSeconds).toLocaleString()}</div>
+              </div>
           </div>
       </div>`;
   }
@@ -402,6 +414,40 @@ class AnalysisChart {
       return (valsCopy[middleIdx - 1] + valsCopy[middleIdx]) / 2;
     }
     return valsCopy[middleIdx];
+  }
+
+  static durationInLargestUnitThatFits(durationSeconds) {
+    const SECONDS_PER_YEAR = 365 * 24 * 60 * 60;
+    if (durationSeconds > SECONDS_PER_YEAR) {
+      return [durationSeconds / SECONDS_PER_YEAR, 'year'];
+    }
+
+    const SECONDS_PER_MONTH = 30 * 24 * 60 * 60;
+    if (durationSeconds > SECONDS_PER_MONTH) {
+      return [durationSeconds / SECONDS_PER_MONTH, 'month'];
+    }
+
+    const SECONDS_PER_WEEK = 7 * 24 * 60 * 60;
+    if (durationSeconds > SECONDS_PER_WEEK) {
+      return [durationSeconds / SECONDS_PER_WEEK, 'week'];
+    }
+
+    const SECONDS_PER_DAY = 24 * 60 * 60;
+    if (durationSeconds > SECONDS_PER_DAY) {
+      return [durationSeconds / SECONDS_PER_DAY, 'day'];
+    }
+
+    const SECONDS_PER_HOUR = 60 * 60;
+    if (durationSeconds > SECONDS_PER_HOUR) {
+      return [durationSeconds / SECONDS_PER_HOUR, 'hour'];
+    }
+
+    const SECONDS_PER_MINUTE = 60;
+    if (durationSeconds > SECONDS_PER_MINUTE) {
+      return [durationSeconds / SECONDS_PER_MINUTE, 'minute'];
+    }
+
+    return [durationSeconds, 'second'];
   }
 
   static getDatapointInRange(timestampFrom, timestampTo, series) {
