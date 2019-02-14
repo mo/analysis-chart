@@ -61,7 +61,7 @@ class AnalysisChart {
       </div>`;
     const totalWidth = args.width || 2000;
     const rightColumnWidth = args.rightColumnWidth || 300;
-    const yAxisWidth = args.yAxisWidth || 100;
+    const yAxisWidth = args.yAxisWidth || 115;
     // The space between the main chart area and the right column is larger if
     // the y-axis zoom slider is visible.
     const rightColumnLeftMarginApprox = 75;
