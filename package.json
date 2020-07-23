@@ -13,7 +13,7 @@
   "author": "",
   "license": "GPL-3.0",
   "devDependencies": {
-    "eslint": "^3.9.0",
+    "eslint": "^4.18.2",
     "eslint-config-airbnb": "^12.0.0",
     "eslint-plugin-import": "^2.0.1"
   }
