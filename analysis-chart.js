@@ -1,4 +1,35 @@
 class AnalysisChart {
+  static INTERVALS = [
+    {
+      name: 'year',
+      short: 'yr',
+    },
+    {
+      name: 'month',
+      short: 'mo',
+    },
+    {
+      name: 'week',
+      short: 'wk',
+    },
+    {
+      name: 'day',
+      short: 'day',
+    },
+    {
+      name: 'hour',
+      short: 'hr',
+    },
+    {
+      name: 'minute',
+      short: 'min',
+    },
+    {
+      name: 'second',
+      short: 'sec',
+    },
+  ]
+
   constructor(argsParameter) {
     const args = Object.assign({}, argsParameter);
     const allYAxisScalingMethods = ['fixed-zero', 'fixed', 'rescale', 'custom'];
@@ -50,11 +81,37 @@ class AnalysisChart {
           <div>
               <div class="selection-inactive">Nothing selected. Drag-select a part of the chart using the mouse to create a selection.</div>
               <div class="selection-active">
-                  <table>
-                  <tr><td>From:</td><td class="selection-start-time"></td></tr>
-                  <tr><td>To:</td><td class="selection-stop-time"></td></tr>
-                  </table>
-                  <div class="selection-diff-container"></div>
+                  <div style="padding: 10px">
+                      <table class="selection-info-table">
+                      <tr><td>From:</td><td class="selection-start-time"></td></tr>
+                      <tr><td>To:</td><td class="selection-stop-time"></td></tr>
+                      <tr><td>Duration:</td><td class="selection-duration"></td></tr>
+                      </table>
+                      <div style="display: flex; justify-content: flex-end; align-items: center">
+                          <span style="margin-right: 4px">Rate intervall:</span>
+                          <select class="rate-interval">
+                              ${AnalysisChart.INTERVALS.map(interval => `
+                                <option id="${interval.name}">${interval.name}</option>
+                              `)}
+                          </select>
+                      </div>
+                  </div>
+                  <div class="series-diff-table-wrapper">
+                    <table class="series-diff-table">
+                      <thead>
+                        <tr>
+                          <td class="diff-tbl-caption-diff">Diff</td>
+                          <td class="diff-tbl-caption-diffpercent">Diff%</td>
+                          <td class="diff-tbl-caption-start">Start</td>
+                          <td class="diff-tbl-caption-end">End</td>
+                          <td class="diff-tbl-caption-median">Median</td>
+                          <td class="diff-tbl-caption-rate">Rate</td>
+                        </tr>
+                      </thead>
+                      <tbody class="selection-diff-container">
+                      </tbody>
+                    </table>
+                  </div>
                   <div class="selection-extra-info"></div>
               </div>
           </div>
@@ -300,6 +357,51 @@ class AnalysisChart {
 
     this.rootElement.querySelector(`.btn-${args.yAxisScalingMode}`).checked = true;
     setTimeout(() => setYAxisScalingPrivate(args.yAxisScalingMode), 0);
+
+    const rateIntervalElement = document.querySelector('.rate-interval')
+    rateIntervalElement.addEventListener('change', () => {
+      this.renderSelectedDiffData(this.selDiffData)
+    })
+
+    const sortBy = (arr, attr, asc) => arr.sort((a, b) => asc ? a[attr] - b[attr] : b[attr] - a[attr])
+
+    document.querySelector('.diff-tbl-caption-diff').addEventListener('click', () => {
+      this.sortAsc = this.sortAttr === 'diff' ? !this.sortAsc : false
+      this.sortAttr = 'diff'
+      this.selDiffData = sortBy(this.selDiffData, 'diffAbsoluteValue', this.sortAsc)
+      this.renderSelectedDiffData(this.selDiffData)
+    })
+    document.querySelector('.diff-tbl-caption-diffpercent').addEventListener('click', () => {
+      this.sortAsc = this.sortAttr === 'diffpercent' ? !this.sortAsc : false
+      this.sortAttr = 'diffpercent'
+      this.selDiffData = sortBy(this.selDiffData, 'diffPercentageValue', this.sortAsc)
+      this.renderSelectedDiffData(this.selDiffData)
+    })
+    document.querySelector('.diff-tbl-caption-start').addEventListener('click', () => {
+      this.sortAsc = this.sortAttr === 'start' ? !this.sortAsc : false
+      this.sortAttr = 'start'
+      this.selDiffData = sortBy(this.selDiffData, 'absoluteFrom', this.sortAsc)
+      this.renderSelectedDiffData(this.selDiffData)
+    })
+    document.querySelector('.diff-tbl-caption-end').addEventListener('click', () => {
+      this.sortAsc = this.sortAttr === 'end' ? !this.sortAsc : false
+      this.sortAttr = 'end'
+      this.selDiffData = sortBy(this.selDiffData, 'absoluteTo', this.sortAsc)
+      this.renderSelectedDiffData(this.selDiffData)
+    })
+    document.querySelector('.diff-tbl-caption-median').addEventListener('click', () => {
+      this.sortAsc = this.sortAttr === 'median' ? !this.sortAsc : false
+      this.sortAttr = 'median'
+      this.selDiffData = sortBy(this.selDiffData, 'median', this.sortAsc)
+      this.renderSelectedDiffData(this.selDiffData)
+    })
+    document.querySelector('.diff-tbl-caption-rate').addEventListener('click', () => {
+      this.sortAsc = this.sortAttr === 'rate' ? !this.sortAsc : false
+      this.sortAttr = 'rate'
+      this.selDiffData = sortBy(this.selDiffData, 'ratePerDay', this.sortAsc)
+      this.renderSelectedDiffData(this.selDiffData)
+    })
+
   }
 
   onYAxisScalingChanged(callback) {
@@ -312,45 +414,43 @@ class AnalysisChart {
     this.rootElement.querySelector('.selection-active').style.display = 'none';
   }
 
-  static appendSeriesDiff(series, datapointsInRange, selDiffContainer) {
-    const firstDatapointInRange = datapointsInRange.slice(0, 1)[0];
-    const lastDatapointInRange = datapointsInRange.slice(-1)[0];
-    const diffAbsoluteValue = lastDatapointInRange.y - firstDatapointInRange.y;
+  static intervalShortForm = (intervalName) =>
+    AnalysisChart.INTERVALS.find(intervall => intervall.name === intervalName).short
+
+  static capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
+  static getRateFieldNameForRateInterval = (intervalName) => `ratePer${AnalysisChart.capitalize(intervalName)}`
+
+  static renderDiffData(diffData, selDiffContainer, selectedRateInterval) {
     let diffPrefix;
-    if (diffAbsoluteValue >= 0) {
+    if (diffData.diffAbsoluteValue >= 0) {
       diffPrefix = '+';
     } else {
       diffPrefix = '';
     }
-    const diffPercentageValue = (100 * lastDatapointInRange.y / firstDatapointInRange.y - 100).toFixed(2);
-    const diffPercentageStr = diffPrefix + diffPercentageValue;
-    const diffAbsoluteStr = diffPrefix + diffAbsoluteValue.toLocaleString();
-    const absoluteFrom = firstDatapointInRange.y.toLocaleString();
-    const absoluteTo = lastDatapointInRange.y.toLocaleString();
-    const median = AnalysisChart.median(datapointsInRange.map(dp => dp.y));
-    const medianStr = median.toLocaleString();
-    const durationSeconds = lastDatapointInRange.x - firstDatapointInRange.x;
-    const [amount, unit] = AnalysisChart.durationInLargestUnitThatFits(durationSeconds);
+    const diffPercentageStr = diffPrefix + diffData.diffPercentageValue;
+    const diffAbsoluteStr = diffPrefix + diffData.diffAbsoluteValue.toLocaleString();
+
+    const rate = diffData[AnalysisChart.getRateFieldNameForRateInterval(selectedRateInterval)]
+    const rateToStr = r => Number(r.toFixed(1)).toLocaleString()
+    const rateStr = rateToStr(rate)
 
     selDiffContainer.innerHTML += `
-      <div class="diff-wrapper-outer">
-          <span class="colorbox" style="background: ${series.color}"></span>
-          <div class="diff-wrapper-inner">
-              <div>${series.name}</div>
-              <div class=".diff-value">${diffPercentageStr}% (${diffAbsoluteStr}) ${absoluteFrom} &#x2799; ${absoluteTo}</div>
-              <div class=".diff-value">Duration: ${amount.toFixed(2)} ${unit}s</div>
-              <div class=".diff-value">Median: ${medianStr}</div>
-              <div class=".diff-value">
-                <div>Per year: ${(diffAbsoluteValue / (durationSeconds / (365 * 24 * 60 * 60))).toLocaleString()}</div>
-                <div>Per month: ${(diffAbsoluteValue / (durationSeconds / (30 * 24 * 60 * 60))).toLocaleString()}</div>
-                <div>Per week: ${(diffAbsoluteValue / (durationSeconds / (7 * 24 * 60 * 60))).toLocaleString()}</div>
-                <div>Per day: ${(diffAbsoluteValue / (durationSeconds / (24 * 60 * 60))).toLocaleString()}</div>
-                <div>Per hour: ${(diffAbsoluteValue / (durationSeconds / (60 * 60))).toLocaleString()}</div>
-                <div>Per minute: ${(diffAbsoluteValue / (durationSeconds / 60)).toLocaleString()}</div>
-                <div>Per second: ${(diffAbsoluteValue / durationSeconds).toLocaleString()}</div>
-              </div>
+      <tr>
+        <td colspan="6" class="diff-series-name-cell">
+          <div style="display: flex; align-items: center">
+            <span class="colorbox" style="background: ${diffData.seriesColor}; margin-right: 3px"></span>
+            <span>${diffData.seriesName}</span>
           </div>
-      </div>`;
+        </td>
+      </tr>
+      <tr>
+        <td>${diffAbsoluteStr}</td>
+        <td>${diffPercentageStr}%</td>
+        <td>${diffData.absoluteFrom.toLocaleString()}</td>
+        <td>${diffData.absoluteTo.toLocaleString()}</td>
+        <td>${diffData.median.toLocaleString()}</td>
+        <td><a title="${rate.toLocaleString()} per ${selectedRateInterval}">${rateStr}/${AnalysisChart.intervalShortForm(selectedRateInterval)}</a></td>
+      </tr>`;
   }
 
   updateSelectionInfo(selStartX, selEndX) {
@@ -360,23 +460,66 @@ class AnalysisChart {
     const fromTimestamp = this.graph.x.invert(selLeft - this.drawAreaBoundingRect.left);
     const to = this.getTimeAtChartXCoord(selRight);
     const toTimestamp = this.graph.x.invert(selRight - this.drawAreaBoundingRect.left);
+    const durationSeconds = toTimestamp - fromTimestamp
+    const [durationAmount, durationUnit] = AnalysisChart.durationInLargestUnitThatFits(durationSeconds);
     this.rootElement.querySelector('.selection-inactive').style.display = 'none';
     this.rootElement.querySelector('.selection-active').style.display = 'block';
 
     this.rootElement.querySelector('.selection-start-time').innerText = from.toISOString().replace('T', ' ').slice(0, 16);
     this.rootElement.querySelector('.selection-stop-time').innerText = to.toISOString().replace('T', ' ').slice(0, 16);
+    this.rootElement.querySelector('.selection-duration').innerText = `${durationAmount.toFixed(1)} ${durationUnit}s`;
 
-    const selDiffContainer = this.rootElement.querySelector('.selection-diff-container');
-    selDiffContainer.innerHTML = '';
+    this.selDiffData = [];
     this.series.forEach((series) => {
       const datapointsInRange = AnalysisChart.getDatapointsInRange(fromTimestamp, toTimestamp, series);
       if (datapointsInRange.length > 0) {
-        AnalysisChart.appendSeriesDiff(series, datapointsInRange, selDiffContainer);
+        const firstDatapointInRange = datapointsInRange.slice(0, 1)[0];
+        const lastDatapointInRange = datapointsInRange.slice(-1)[0];
+        const diffAbsoluteValue = lastDatapointInRange.y - firstDatapointInRange.y;
+        const diffPercentageValue = (100 * lastDatapointInRange.y / firstDatapointInRange.y - 100).toFixed(2);
+        const absoluteFrom = firstDatapointInRange.y;
+        const absoluteTo = lastDatapointInRange.y;
+        const median = AnalysisChart.median(datapointsInRange.map(dp => dp.y));
+        const durationSeconds = lastDatapointInRange.x - firstDatapointInRange.x;
+        const [durationAmount, durationUnit] = AnalysisChart.durationInLargestUnitThatFits(durationSeconds);
+        this.selDiffData.push({
+          seriesName: series.name,
+          seriesColor: series.color,
+          diffAbsoluteValue,
+          diffPercentageValue,
+          absoluteFrom,
+          absoluteTo,
+          median,
+          durationAmount,
+          durationUnit,
+          ratePerYear: diffAbsoluteValue / (durationSeconds / (365 * 24 * 60 * 60)),
+          ratePerMonth: diffAbsoluteValue / (durationSeconds / (30 * 24 * 60 * 60)),
+          ratePerWeek: diffAbsoluteValue / (durationSeconds / (7 * 24 * 60 * 60)),
+          ratePerDay: diffAbsoluteValue / (durationSeconds / (24 * 60 * 60)),
+          ratePerHour: diffAbsoluteValue / (durationSeconds / (60 * 60)),
+          ratePerMinute: diffAbsoluteValue / (durationSeconds / 60),
+          ratePerSecond: diffAbsoluteValue / durationSeconds,
+        })
       }
     });
+    // Reverse order so that initial order matches what is rendered in the legend
+    this.selDiffData.reverse()
+    this.sortAttr = 'legend'
+    this.renderSelectedDiffData(this.selDiffData)
 
     this.onRangeSelectedCallbacks.forEach((callback) => {
       callback(fromTimestamp, toTimestamp);
+    });
+  }
+
+  renderSelectedDiffData(selDiffData) {
+    const rateIntervalElement = document.querySelector('.rate-interval')
+    const selectedRateInterval = rateIntervalElement.selectedOptions[0].id;
+
+    const selDiffContainer = this.rootElement.querySelector('.selection-diff-container');
+    selDiffContainer.innerHTML = '';
+    selDiffData.forEach((diffDataObj, i) => {
+      AnalysisChart.renderDiffData(diffDataObj, selDiffContainer, selectedRateInterval);
     });
   }
 

@@ -79,14 +79,16 @@
 }
 .analysis-chart .selection-active,
 .analysis-chart .selection-inactive {
-    width: 300px;
+    width: 390px;
     background: #F8F8F8;
-    padding: 10px;
     margin-top: 20px;
     font-family: arial;
     font-size: 9pt;
 }
-.analysis-chart .selection-active tr td:first-child {
+.analysis-chart .selection-inactive {
+    padding: 10px;
+}
+.analysis-chart .selection-active .selection-info-table td:first-child {
     font-weight: bold;
     padding-right: 10px;
 }
@@ -99,13 +101,30 @@
     display: inline-block;
     border-radius: 2px;
 }
-.analysis-chart .selection-active .diff-wrapper-outer {
-    margin-bottom: 10px;
-    overflow: hidden;
+.analysis-chart .selection-active .series-diff-table-wrapper {
+    background: white;
 }
-.analysis-chart .selection-active .diff-wrapper-inner {
-    width: calc(100% - 20px);
-    margin-left: 3px;
+.analysis-chart .selection-active .series-diff-table {
+    margin-top: 20px;
+    width: 100%;
+    font-size: 12px;
+    font-family: arial;
+    border-spacing: 4px;
+}
+.analysis-chart .selection-active .series-diff-table td {
+    text-align: right;
+}
+.analysis-chart .selection-active .series-diff-table .diff-series-name-cell {
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+.analysis-chart .selection-active .series-diff-table thead td {
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+}
+.analysis-chart .selection-active .diff-row-bottom-spacer {
+    height: 5px;
 }
 .analysis-chart .diff-value {
     background: #E8E8E8;
@@ -116,9 +135,6 @@
     -webkit-user-select: none;
     -moz-user-select: none;
     cursor: pointer;
-}
-.analysis-chart .selection-active .diff-wrapper-outer > * {
-    float: left;
 }
 .analysis-chart .detail {
     user-select: none;
