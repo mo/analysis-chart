@@ -1,35 +1,4 @@
 class AnalysisChart {
-  static INTERVALS = [
-    {
-      name: 'year',
-      short: 'yr',
-    },
-    {
-      name: 'month',
-      short: 'mo',
-    },
-    {
-      name: 'week',
-      short: 'wk',
-    },
-    {
-      name: 'day',
-      short: 'day',
-    },
-    {
-      name: 'hour',
-      short: 'hr',
-    },
-    {
-      name: 'minute',
-      short: 'min',
-    },
-    {
-      name: 'second',
-      short: 'sec',
-    },
-  ]
-
   constructor(argsParameter) {
     const args = Object.assign({}, argsParameter);
     const allYAxisScalingMethods = ['fixed-zero', 'fixed', 'rescale', 'custom'];
@@ -414,11 +383,16 @@ class AnalysisChart {
     this.rootElement.querySelector('.selection-active').style.display = 'none';
   }
 
-  static intervalShortForm = (intervalName) =>
-    AnalysisChart.INTERVALS.find(intervall => intervall.name === intervalName).short
+  static intervalShortForm(intervalName) {
+    return AnalysisChart.INTERVALS.find(intervall => intervall.name === intervalName).short
+  }
 
-  static capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
-  static getRateFieldNameForRateInterval = (intervalName) => `ratePer${AnalysisChart.capitalize(intervalName)}`
+  static capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1)
+  }
+  static getRateFieldNameForRateInterval(intervalName) {
+    return `ratePer${AnalysisChart.capitalize(intervalName)}`
+  }
 
   static renderDiffData(diffData, selDiffContainer, selectedRateInterval) {
     let diffPrefix;
@@ -604,3 +578,34 @@ class AnalysisChart {
     return datapointsInRange;
   }
 }
+
+AnalysisChart.INTERVALS = [
+  {
+    name: 'year',
+    short: 'yr',
+  },
+  {
+    name: 'month',
+    short: 'mo',
+  },
+  {
+    name: 'week',
+    short: 'wk',
+  },
+  {
+    name: 'day',
+    short: 'day',
+  },
+  {
+    name: 'hour',
+    short: 'hr',
+  },
+  {
+    name: 'minute',
+    short: 'min',
+  },
+  {
+    name: 'second',
+    short: 'sec',
+  },
+]
