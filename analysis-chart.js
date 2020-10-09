@@ -405,7 +405,7 @@ class AnalysisChart {
     const diffAbsoluteStr = diffPrefix + diffData.diffAbsoluteValue.toLocaleString();
 
     const rate = diffData[AnalysisChart.getRateFieldNameForRateInterval(selectedRateInterval)]
-    const rateToStr = r => Number(r.toFixed(1)).toLocaleString()
+    const rateToStr = r => (r >= 0 ? '+' : '') + Number(r.toFixed(1)).toLocaleString()
     const rateStr = rateToStr(rate)
 
     selDiffContainer.innerHTML += `
