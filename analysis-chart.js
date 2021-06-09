@@ -73,6 +73,7 @@ class AnalysisChart {
                           <td class="diff-tbl-caption-diffpercent">Diff%</td>
                           <td class="diff-tbl-caption-start">Start</td>
                           <td class="diff-tbl-caption-end">End</td>
+                          <td class="diff-tbl-caption-count">Count</td>
                           <td class="diff-tbl-caption-median">Median</td>
                           <td class="diff-tbl-caption-rate">Rate</td>
                         </tr>
@@ -358,6 +359,12 @@ class AnalysisChart {
       this.selDiffData = sortBy(this.selDiffData, 'absoluteTo', this.sortAsc)
       this.renderSelectedDiffData(this.selDiffData)
     })
+    document.querySelector('.diff-tbl-caption-count').addEventListener('click', () => {
+      this.sortAsc = this.sortAttr === 'count' ? !this.sortAsc : false
+      this.sortAttr = 'count'
+      this.selDiffData = sortBy(this.selDiffData, 'datapointCount', this.sortAsc)
+      this.renderSelectedDiffData(this.selDiffData)
+    })
     document.querySelector('.diff-tbl-caption-median').addEventListener('click', () => {
       this.sortAsc = this.sortAttr === 'median' ? !this.sortAsc : false
       this.sortAttr = 'median'
@@ -410,7 +417,7 @@ class AnalysisChart {
 
     selDiffContainer.innerHTML += `
       <tr>
-        <td colspan="6" class="diff-series-name-cell">
+        <td colspan="7" class="diff-series-name-cell">
           <div style="display: flex; align-items: center">
             <span class="colorbox" style="background: ${diffData.seriesColor}; margin-right: 3px"></span>
             <span>${diffData.seriesName}</span>
@@ -422,6 +429,7 @@ class AnalysisChart {
         <td>${diffPercentageStr}%</td>
         <td>${diffData.absoluteFrom.toLocaleString()}</td>
         <td>${diffData.absoluteTo.toLocaleString()}</td>
+        <td>${diffData.datapointCount.toLocaleString()}</td>
         <td>${diffData.median.toLocaleString()}</td>
         <td><a title="${rate.toLocaleString()} per ${selectedRateInterval}">${rateStr}/${AnalysisChart.intervalShortForm(selectedRateInterval)}</a></td>
       </tr>`;
@@ -466,6 +474,7 @@ class AnalysisChart {
           median,
           durationAmount,
           durationUnit,
+          datapointCount: datapointsInRange.length,
           ratePerYear: diffAbsoluteValue / (durationSeconds / (365 * 24 * 60 * 60)),
           ratePerMonth: diffAbsoluteValue / (durationSeconds / (30 * 24 * 60 * 60)),
           ratePerWeek: diffAbsoluteValue / (durationSeconds / (7 * 24 * 60 * 60)),
