@@ -420,7 +420,7 @@ class AnalysisChart {
         <td colspan="7" class="diff-series-name-cell">
           <div style="display: flex; align-items: center">
             <span class="colorbox" style="background: ${diffData.seriesColor}; margin-right: 3px"></span>
-            <span>${diffData.seriesName}</span>
+            <span style="text-overflow: ellipsis; overflow: hidden; display: block; width: 400px; white-space: nowrap; text-align: left;" class="series-title" title="${diffData.seriesName}">${diffData.seriesName}</span>
           </div>
         </td>
       </tr>
