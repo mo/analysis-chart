@@ -326,7 +326,12 @@ class AnalysisChart {
     };
 
     this.rootElement.querySelector(`.btn-${args.yAxisScalingMode}`).checked = true;
-    setTimeout(() => setYAxisScalingPrivate(args.yAxisScalingMode), 0);
+    // Rickshaw.Graph.RangeSlider creates its jQuery UI slider in a DOM ready
+    // callback, and its graph.onUpdate() handler throws if the slider does not
+    // exist yet (which also skips all later update callbacks). Render via a
+    // DOM ready callback too, which runs after the slider has been created,
+    // since this chart may be constructed before the document is ready.
+    setTimeout(() => $(() => setYAxisScalingPrivate(args.yAxisScalingMode)), 0);
 
     const rateIntervalElement = document.querySelector('.rate-interval')
     rateIntervalElement.addEventListener('change', () => {
