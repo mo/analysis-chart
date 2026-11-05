@@ -23,6 +23,26 @@ class AnalysisChart {
               <div class="y-zoom-slider"></div>
       </div>
       <div class="right-column">
+          <div class="right-column-header">
+              <div class="options-menu">
+                  <button type="button" class="options-menu-button" title="Chart options" aria-label="Chart options"
+                          aria-haspopup="true" aria-expanded="false">&#x22EE;</button>
+                  <div class="options-menu-dropdown" hidden>
+                      <div class="options-menu-heading">Background shading</div>
+                      ${AnalysisChart.BACKGROUND_SHADINGS.map(shading => `
+                        <label title="${shading.description}">
+                            <input type="checkbox" data-setting="${shading.key}">
+                            <span class="shading-swatch ${shading.cssClass}"></span>
+                            <span>
+                                ${shading.label}
+                                <span class="options-menu-item-hidden-note">(zoom in to see)</span>
+                                <span class="options-menu-item-description">${shading.description}</span>
+                            </span>
+                        </label>
+                      `).join('')}
+                  </div>
+              </div>
+          </div>
           <div class="legend"></div>
           <div class="options-panel">
               <div class="legend-help-text">
@@ -333,6 +353,11 @@ class AnalysisChart {
     // since this chart may be constructed before the document is ready.
     setTimeout(() => $(() => setYAxisScalingPrivate(args.yAxisScalingMode)), 0);
 
+    this.settings = AnalysisChart.loadSettings();
+    graph.onUpdate(() => this.drawBackgroundShading());
+    this.drawBackgroundShading();
+    this.initOptionsMenu();
+
     const rateIntervalElement = document.querySelector('.rate-interval')
     rateIntervalElement.addEventListener('change', () => {
       this.renderSelectedDiffData(this.selDiffData)
@@ -383,6 +408,159 @@ class AnalysisChart {
       this.renderSelectedDiffData(this.selDiffData)
     })
 
+  }
+
+  initOptionsMenu() {
+    const menu = this.rootElement.querySelector('.options-menu');
+    const button = menu.querySelector('.options-menu-button');
+    const dropdown = menu.querySelector('.options-menu-dropdown');
+    const setOpen = (open) => {
+      dropdown.hidden = !open;
+      button.setAttribute('aria-expanded', String(open));
+    };
+    button.addEventListener('click', () => setOpen(dropdown.hidden));
+    document.addEventListener('click', (ev) => {
+      if (!menu.contains(ev.target)) {
+        setOpen(false);
+      }
+    });
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && !dropdown.hidden) {
+        setOpen(false);
+        button.focus();
+      }
+    });
+    menu.querySelectorAll('input[data-setting]').forEach((checkbox) => {
+      const key = checkbox.dataset.setting;
+      checkbox.checked = Boolean(this.settings[key]);
+      checkbox.addEventListener('change', () => {
+        this.settings[key] = checkbox.checked;
+        AnalysisChart.saveSettings(this.settings);
+        this.graph.render();
+      });
+    });
+  }
+
+  static loadSettings() {
+    try {
+      return JSON.parse(window.localStorage.getItem(AnalysisChart.SETTINGS_STORAGE_KEY)) || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  static saveSettings(settings) {
+    try {
+      window.localStorage.setItem(AnalysisChart.SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    } catch (e) {
+      console.warn('Could not save chart settings', e);
+    }
+  }
+
+  // Draws the enabled background shadings (weekends, office hours) behind the
+  // series lines. Called after every render since Rickshaw clears the SVG, and
+  // so that the regions follow zooming and y-axis rescaling.
+  drawBackgroundShading() {
+    const graph = this.graph;
+    const svg = graph.vis.node();
+    svg.querySelectorAll('.background-shading').forEach(el => el.remove());
+    const [domainFrom, domainTo] = graph.x.domain();
+    const pixelsPerHour = graph.width / ((domainTo - domainFrom) / 3600);
+    const enabledShadings = AnalysisChart.BACKGROUND_SHADINGS.filter((shading) => {
+      // When zoomed out so far that the regions would be thinner than a couple
+      // of pixels, the shading is just a uniform haze, so skip it.
+      const tooDense = shading.regionHours * pixelsPerHour < AnalysisChart.MIN_SHADING_REGION_PIXELS;
+      const label = this.rootElement.querySelector(`input[data-setting="${shading.key}"]`).closest('label');
+      label.classList.toggle('shading-hidden-when-zoomed-out', Boolean(this.settings[shading.key]) && tooDense);
+      return this.settings[shading.key] && !tooDense;
+    });
+    if (enabledShadings.length === 0) {
+      return;
+    }
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const group = document.createElementNS(SVG_NS, 'g');
+    group.setAttribute('class', 'background-shading');
+    // Insert first so that the shading ends up behind the series lines.
+    svg.insertBefore(group, svg.firstChild);
+
+    enabledShadings.forEach((shading) => {
+      AnalysisChart.computeShadingRegions(shading, domainFrom * 1000, domainTo * 1000).forEach(([startMs, endMs]) => {
+        const left = Math.max(graph.x(startMs / 1000), 0);
+        const right = Math.min(graph.x(endMs / 1000), graph.width);
+        if (right <= left) {
+          return;
+        }
+        const rect = document.createElementNS(SVG_NS, 'rect');
+        rect.setAttribute('class', shading.cssClass);
+        rect.setAttribute('x', left);
+        rect.setAttribute('y', 0);
+        rect.setAttribute('width', right - left);
+        rect.setAttribute('height', graph.height);
+        group.appendChild(rect);
+      });
+    });
+  }
+
+  // Returns [[startMs, endMs], ...] for all regions overlapping [fromMs, toMs].
+  static computeShadingRegions(shading, fromMs, toMs) {
+    const regions = [];
+    const start = AnalysisChart.zonedDateParts(fromMs, shading.timeZone);
+    // Start a few days early so regions spanning several days (weekends) that
+    // began before fromMs are included too.
+    for (let i = -3; ; i++) {
+      const d = new Date(Date.UTC(start.year, start.month - 1, start.day + i));
+      const day = {
+        year: d.getUTCFullYear(),
+        month: d.getUTCMonth(),
+        day: d.getUTCDate(),
+        dayOfWeek: d.getUTCDay(),
+      };
+      if (AnalysisChart.zonedWallClockToEpochMs(day.year, day.month, day.day, 0, shading.timeZone) > toMs) {
+        break;
+      }
+      shading.regionsForDay(day).forEach(([fromHour, toHour]) => {
+        const regionStart = AnalysisChart.zonedWallClockToEpochMs(day.year, day.month, day.day, fromHour, shading.timeZone);
+        const regionEnd = AnalysisChart.zonedWallClockToEpochMs(day.year, day.month, day.day, toHour, shading.timeZone);
+        if (regionEnd > fromMs && regionStart < toMs) {
+          regions.push([regionStart, regionEnd]);
+        }
+      });
+    }
+    return regions;
+  }
+
+  // Returns {year, month (1-based), day, hour, minute, second} for epochMs in
+  // timeZone (undefined = the browser's local time zone).
+  static zonedDateParts(epochMs, timeZone) {
+    const cacheKey = timeZone || '';
+    if (!AnalysisChart.zonedFormatterCache[cacheKey]) {
+      AnalysisChart.zonedFormatterCache[cacheKey] = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        hourCycle: 'h23',
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: 'numeric', minute: 'numeric', second: 'numeric',
+      });
+    }
+    const parts = {};
+    AnalysisChart.zonedFormatterCache[cacheKey].formatToParts(new Date(epochMs)).forEach(({ type, value }) => {
+      parts[type] = Number(value);
+    });
+    return parts;
+  }
+
+  static timeZoneOffsetMs(epochMs, timeZone) {
+    const p = AnalysisChart.zonedDateParts(epochMs, timeZone);
+    const wallClockAsUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+    return wallClockAsUtc - Math.floor(epochMs / 1000) * 1000;
+  }
+
+  // Converts a wall clock time in timeZone to epoch ms. Month is 0-based and
+  // day/hour may overflow (e.g. hour 48 = two days later), like Date.UTC().
+  static zonedWallClockToEpochMs(year, month, day, hour, timeZone) {
+    const n = new Date(Date.UTC(year, month, day, hour));
+    const wallClockAsUtc = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), n.getUTCHours());
+    const guess = wallClockAsUtc - AnalysisChart.timeZoneOffsetMs(wallClockAsUtc, timeZone);
+    return wallClockAsUtc - AnalysisChart.timeZoneOffsetMs(guess, timeZone);
   }
 
   onYAxisScalingChanged(callback) {
@@ -623,3 +801,31 @@ AnalysisChart.INTERVALS = [
     short: 'sec',
   },
 ]
+
+AnalysisChart.SETTINGS_STORAGE_KEY = 'analysis-chart-settings';
+
+AnalysisChart.zonedFormatterCache = {};
+
+AnalysisChart.MIN_SHADING_REGION_PIXELS = 2;
+
+AnalysisChart.BACKGROUND_SHADINGS = [
+  {
+    key: 'shadeWeekends',
+    label: 'Shade weekends',
+    description: 'Saturday 00:00 to Monday 00:00 in the browser\'s local time zone',
+    cssClass: 'shade-weekend',
+    // undefined = the browser's local time zone, same as the x-axis labels
+    timeZone: undefined,
+    regionHours: 48,
+    regionsForDay: day => (day.dayOfWeek === 6 ? [[0, 48]] : []),
+  },
+  {
+    key: 'shadeOfficeHours',
+    label: 'Shade CET office hours',
+    description: 'Monday to Friday 09:00 to 17:00 in CET/CEST (Europe/Stockholm)',
+    cssClass: 'shade-office-hours',
+    timeZone: 'Europe/Stockholm',
+    regionHours: 8,
+    regionsForDay: day => (day.dayOfWeek >= 1 && day.dayOfWeek <= 5 ? [[9, 17]] : []),
+  },
+];
